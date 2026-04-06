@@ -47,7 +47,7 @@ export const handler = async (event: any) => {
       return ApiResponse.notFound(rqUID, err.message);
     }
     if (err instanceof ConflictError) {
-      return { statusCode: 409, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ rqUID, timestamp: new Date().toISOString(), message: err.message }) };
+      return ApiResponse.conflict(rqUID, err.message);
     }
     console.error('Unhandled error', err);
     return ApiResponse.serverError(rqUID, 'Internal server error');

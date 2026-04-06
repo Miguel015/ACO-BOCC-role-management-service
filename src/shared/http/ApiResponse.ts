@@ -20,6 +20,10 @@ export class ApiResponse {
     return ApiResponse.json(rqUID, 404, message);
   }
 
+  static conflict(rqUID: string, message: string, data?: any) {
+    return ApiResponse.json(rqUID, 409, message, data);
+  }
+
   static serverError(rqUID: string, message: string) {
     return ApiResponse.json(rqUID, 500, message);
   }
