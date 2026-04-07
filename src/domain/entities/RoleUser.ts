@@ -16,3 +16,4 @@ export interface RoleUser {
   observation?: string | null;
   deletedAt?: Date | null;
 }
+
