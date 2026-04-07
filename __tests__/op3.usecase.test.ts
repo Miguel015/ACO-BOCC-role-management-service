@@ -45,10 +45,16 @@ describe('OP3 UpdateUserRoleStatusUseCase (Eliminar)', () => {
   test('ok -> returns Eliminado and deleted_at', async () => {
     const now = new Date();
     const existing: RoleUser = {
+      uuid: 'uuid-1',
       documentType: 'CC',
       document: '1',
+      userName: 'Test User',
       email: 'a@a',
+      roleId: 1,
       status: 'Activo',
+      zone: 'NORTE',
+      userCreated: 'admin',
+      createdAt: now,
       observation: null,
       deletedAt: null,
       userUpdated: 'x',
