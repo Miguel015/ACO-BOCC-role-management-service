@@ -1,0 +1,86 @@
+import { PostgresClient } from '../../infrastructure/persistence/db/PostgresClient';
+import { PostgresRoleUserRepository } from '../../infrastructure/persistence/repositories/PostgresRoleUserRepository';
+import { ListRoleUsersUseCase } from '../../application/use-cases/ListRoleUsersUseCase';
+import { UpdateUserRoleStatusUseCase } from '../../application/use-cases/UpdateUserRoleStatusUseCase';
+import { CreateRoleUserUseCase } from '../../application/use-cases/CreateRoleUserUseCase';
+import { ApiResponse } from '../../shared/http/ApiResponse';
+import { ValidationError } from '../../shared/errors/ValidationError';
+import { NotFoundError } from '../../shared/errors/NotFoundError';
+import { ConflictError } from '../../shared/errors/ConflictError';
+import { APIGatewayProxyEvent, Context } from 'aws-lambda';
+
+const REQUIRED_HEADERS = ['X-RqUID', 'X-Channel', 'X-CompanyId', 'X-ClientDt'];
+
+export const handler = async (event: APIGatewayProxyEvent, context: Context) => {
+  const headers = event.headers || {};
+  const getHeader = (name: string) => headers[name] || headers[name.toLowerCase()];
+  const rqUID = getHeader('X-RqUID');
+
+  for (const h of REQUIRED_HEADERS) {
+    if (!getHeader(h)) {
+      return ApiResponse.badRequest(rqUID || 'no-rquid', `Missing required header ${h}`);
+    }
+  }
+
+  if (!rqUID) {
+    return ApiResponse.badRequest('no-rquid', 'Missing X-RqUID header');
+  }
+
+  const httpMethod = event.httpMethod;
+  const path = event.path;
+
+  const repoClient = new PostgresClient();
+  const repo = new PostgresRoleUserRepository(repoClient);
+
+  try {
+    // 1. GET /role-users -> listRoleUsers
+    if (httpMethod === 'GET') {
+      const queryParams = event.queryStringParameters || {};
+      const useCase = new ListRoleUsersUseCase(repo);
+      const result = await useCase.execute({
+        page: queryParams.page,
+        limit: queryParams.limit,
+      });
+      return ApiResponse.ok(rqUID, result);
+    }
+
+    // 2. PATCH or PUT /role-users/status -> updateStatusRole
+    if (httpMethod === 'PATCH' || httpMethod === 'PUT') {
+      let body: any;
+      if (!event.body) throw new Error('Missing body');
+      body = typeof event.body === 'string' ? JSON.parse(event.body) : event.body;
+
+      const useCase = new UpdateUserRoleStatusUseCase(repo);
+      const result = await useCase.execute(body);
+      return ApiResponse.json(rqUID, 200, 'Estado actualizado', result);
+    }
+
+    // 3. POST /role-users -> create RoleUser
+    if (httpMethod === 'POST') {
+      let body: any;
+      if (!event.body) throw new Error('Missing body');
+      body = typeof event.body === 'string' ? JSON.parse(event.body) : event.body;
+
+      const useCase = new CreateRoleUserUseCase(repo);
+      const result = await useCase.execute(body);
+      return ApiResponse.json(rqUID, 201, 'RoleUser creado', result);
+    }
+
+    return ApiResponse.notFound(rqUID, `Route not found for ${httpMethod} ${path}`);
+  } catch (err: any) {
+    if (err instanceof ValidationError) {
+      return ApiResponse.badRequest(rqUID, err.message);
+    }
+    if (err instanceof NotFoundError) {
+      return ApiResponse.notFound(rqUID, err.message);
+    }
+    if (err instanceof ConflictError) {
+      return ApiResponse.conflict(rqUID, err.message);
+    }
+    if (err.message === 'Missing body' || err.message === 'Invalid JSON body') {
+      return ApiResponse.badRequest(rqUID, 'Invalid JSON body');
+    }
+    console.error('Unhandled error', err);
+    return ApiResponse.serverError(rqUID, 'Internal server error');
+  }
+};
