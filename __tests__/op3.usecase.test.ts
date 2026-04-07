@@ -51,6 +51,7 @@ describe('OP3 UpdateUserRoleStatusUseCase (Eliminar)', () => {
       userName: 'Test User',
       email: 'a@a',
       roleId: 1,
+      role: 'ROLE',
       status: 'Activo',
       zone: 'NORTE',
       userCreated: 'admin',

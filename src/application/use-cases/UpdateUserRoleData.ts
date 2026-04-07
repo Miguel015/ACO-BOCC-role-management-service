@@ -5,13 +5,7 @@ export class UpdateUserRoleData{
    constructor(private repo: RoleUserRepository) {  }
 
     async execute(data: RoleUser){
-       const roleUser = {
-           nameUser: data.userName,
-           role: data.role,
-           zone: data.zone,
-           userUpdated: data.userUpdated,
-           updatedAt: data.updatedAt
-       }
-       await this.repo.updateRoleUserData(roleUser);
+       // repository expects a full RoleUser entity; caller provides it
+       await this.repo.updateRoleUserData(data);
     }
 }

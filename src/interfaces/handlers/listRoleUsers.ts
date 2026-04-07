@@ -23,7 +23,7 @@ export const handler = async (event: any) => {
 
   const queryParams = event.queryStringParameters || {};
 
-  const repoClient = new PostgresClient();
+  const repoClient = await PostgresClient.create();
   const repo = new PostgresRoleUserRepository(repoClient);
   const useCase = new ListRoleUsersUseCase(repo);
 

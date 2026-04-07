@@ -12,6 +12,7 @@ const makeFakeUser = (i: number): RoleUser => ({
   userName: `User ${i}`,
   email: `user${i}@example.com`,
   roleId: 1,
+  role: 'ROLE',
   status: 'Activo',
   zone: 'NORTE',
   userCreated: 'admin',
