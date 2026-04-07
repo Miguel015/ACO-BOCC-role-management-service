@@ -60,6 +60,7 @@ export class PostgresRoleUserRepository implements RoleUserRepository {
       email: r.email,
       roleId: r.role_id,
       status: r.status,
+      role: r.role,
       zone: r.zone,
       userCreated: r.user_created,
       createdAt: new Date(r.created_at),
@@ -99,5 +100,50 @@ export class PostgresRoleUserRepository implements RoleUserRepository {
 
     const res = await this.client.query(sql, params);
     return res.rowCount > 0;
+  }
+
+  async updateRoleUserData(roleUser: RoleUser) {
+    try {
+      const result = await this.client.query("UPDATE ROLE_USER SET " +
+        "userName = ?, " +
+        "role = ?, " +
+        "zone = ?, " +
+        "userUpdated = ?, " +
+        "updatedAt = ? WHERE uuid = ?",
+        [
+          roleUser.userName, roleUser.role, roleUser.zone, roleUser.userUpdated,
+          roleUser.updatedAt, roleUser.uuid
+        ]);
+      return result.rowCount > 0;
+    } catch (err) {
+      return false;
+    }
+  }
+
+  async create(roleUser: Partial<RoleUser>): Promise<RoleUser> {
+    const sql = `
+      INSERT INTO role_user (
+        document_type, document, user_name, email, role_id, role,
+        status, zone, user_created, user_updated, observation
+      ) VALUES (
+        $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11
+      ) RETURNING *;
+    `;
+    const params = [
+      roleUser.documentType,
+      roleUser.document,
+      roleUser.userName,
+      roleUser.email,
+      roleUser.roleId,
+      roleUser.role,
+      roleUser.status || 'Activo',
+      roleUser.zone,
+      roleUser.userCreated,
+      roleUser.userUpdated || roleUser.userCreated,
+      roleUser.observation || null
+    ];
+
+    const res = await this.client.query(sql, params);
+    return this.mapRowToEntity(res.rows[0]);
   }
 }

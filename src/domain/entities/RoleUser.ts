@@ -7,6 +7,7 @@ export interface RoleUser {
   userName: string;
   email: string;
   roleId: number;
+  role: string;
   status: RoleStatus;
   zone: string;
   userCreated: string;

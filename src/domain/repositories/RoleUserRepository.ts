@@ -14,4 +14,5 @@ export interface RoleUserRepository {
     deletedAt: Date;
     updatedAt: Date;
   }): Promise<boolean>;
+  create(roleUser: Partial<RoleUser>): Promise<RoleUser>;
 }
