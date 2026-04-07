@@ -32,7 +32,7 @@ export const handler = async (event: any) => {
     return ApiResponse.badRequest(rqUID, 'Invalid JSON body');
   }
 
-  const repoClient = new PostgresClient();
+  const repoClient = await PostgresClient.create();
   const repo = new PostgresRoleUserRepository(repoClient);
   const useCase = new UpdateUserRoleStatusUseCase(repo);
 

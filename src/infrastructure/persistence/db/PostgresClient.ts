@@ -1,16 +1,26 @@
 import { Pool } from 'pg';
+import { DbConfigProvider } from '../../services/DbConfigProvider';
 
 export class PostgresClient {
   private pool: Pool;
 
-  constructor() {
-    const host = process.env.DB_HOST || 'localhost';
-    const port = Number(process.env.DB_PORT || 5432);
-    const user = process.env.DB_USER || 'postgres';
-    const password = process.env.DB_PASSWORD || '';
-    const database = process.env.DB_NAME || 'postgres';
+  private constructor(pool: Pool) {
+    this.pool = pool;
+  }
 
-    this.pool = new Pool({ host, port, user, password, database });
+  static async create(): Promise<PostgresClient> {
+    const provider = new DbConfigProvider();
+    const cfg = await provider.getConfig();
+
+    const pool = new Pool({
+      host: cfg.host,
+      port: cfg.port,
+      user: cfg.user,
+      password: cfg.password,
+      database: cfg.database,
+    });
+
+    return new PostgresClient(pool);
   }
 
   async query<T = any>(text: string, params: any[] = []): Promise<{ rows: T[]; rowCount: number }> {

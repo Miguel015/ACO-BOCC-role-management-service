@@ -29,7 +29,7 @@ export const handler = async (event: APIGatewayProxyEvent, context: Context) => 
   const httpMethod = event.httpMethod;
   const path = event.path;
 
-  const repoClient = new PostgresClient();
+  const repoClient = await PostgresClient.create();
   const repo = new PostgresRoleUserRepository(repoClient);
 
   try {
